@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>OlivePanel – Schede Assaggio</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --olive:     #4a5e2a;
+    --olive-mid: #6b8035;
+    --olive-lt:  #9aaf55;
+    --gold:      #c9a84c;
+    --gold-lt:   #e8cB80;
+    --cream:     #f5f0e8;
+    --parchment: #ede5d0;
+    --ink:       #1e1e18;
+    --ink-soft:  #3d3c30;
+    --red-def:   #8b2e2e;
+    --shadow:    rgba(30,30,24,.18);
+    --r:         14px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--cream); font-family: 'Jost', sans-serif; color: var(--ink); overflow: hidden; }
+
+  /* ── SHELL ── */
+  #app { display: flex; flex-direction: column; height: 100vh; max-width: 480px; margin: 0 auto; background: var(--cream); position: relative; overflow: hidden; }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--olive);
+    padding: 18px 20px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 3px 12px var(--shadow);
+    flex-shrink: 0;
+  }
+  header h1 { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--gold-lt); letter-spacing: .04em; }
+  header h1 span { display: block; font-size: 10px; font-family: 'Jost', sans-serif; font-weight: 300; color: rgba(255,255,255,.6); letter-spacing: .18em; text-transform: uppercase; margin-top: 1px; }
+  .hdr-leaf { font-size: 26px; }
+
+  /* ── NAV ── */
+  nav {
+    display: flex; background: var(--olive-mid); flex-shrink: 0;
+  }
+  nav button {
+    flex: 1; border: none; background: transparent; padding: 10px 4px;
+    font-family: 'Jost', sans-serif; font-size: 10px; font-weight: 500;
+    color: rgba(255,255,255,.65); letter-spacing: .12em; text-transform: uppercase;
+    cursor: pointer; transition: all .2s; position: relative;
+  }
+  nav button.active { color: var(--gold-lt); }
+  nav button.active::after { content:''; position: absolute; bottom: 0; left: 20%; width: 60%; height: 2px; background: var(--gold); border-radius: 2px; }
+  nav button .icon { display: block; font-size: 18px; margin-bottom: 2px; }
+
+  /* ── SCREENS ── */
+  .screen { display: none; flex: 1; overflow-y: auto; padding: 20px 16px; }
+  .screen.active { display: block; }
+
+  /* ── CARDS ── */
+  .card {
+    background: #fff; border-radius: var(--r); box-shadow: 0 2px 10px var(--shadow);
+    padding: 18px; margin-bottom: 14px;
+  }
+  .card-title {
+    font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 600;
+    color: var(--olive); margin-bottom: 14px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--parchment); display: flex; align-items: center; gap: 8px;
+  }
+  .card-title .badge { font-family:'Jost',sans-serif; font-size:10px; font-weight:500; background:var(--olive); color:#fff; padding:2px 8px; border-radius:20px; letter-spacing:.1em; }
+
+  /* ── FORM FIELDS ── */
+  label { display: block; font-size: 11px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 4px; margin-top: 14px; }
+  input[type=text], input[type=date], textarea, select {
+    width: 100%; border: 1.5px solid var(--parchment); border-radius: 8px;
+    padding: 10px 12px; font-family: 'Jost', sans-serif; font-size: 14px;
+    background: var(--cream); color: var(--ink); transition: border .2s;
+    -webkit-appearance: none;
+  }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--olive-lt); }
+  textarea { resize: none; height: 70px; }
+
+  /* ── SLIDER ── */
+  .slider-wrap { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+  .slider-wrap input[type=range] {
+    flex: 1; -webkit-appearance: none; height: 6px; border-radius: 3px;
+    background: var(--parchment); border: none; padding: 0;
+  }
+  .slider-wrap input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
+    background: var(--olive); box-shadow: 0 2px 6px var(--shadow); cursor: pointer;
+  }
+  .slider-val { min-width: 32px; text-align: center; font-size: 15px; font-weight: 600; color: var(--olive); }
+
+  /* ── CHECKBOXES (descrittori) ── */
+  .check-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .check-item { display: flex; align-items: center; gap: 5px; }
+  .check-item input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--olive); }
+  .check-item label { margin: 0; font-size: 12px; text-transform: capitalize; letter-spacing: 0; font-weight: 400; }
+
+  /* ── RADIO fruttato ── */
+  .radio-row { display: flex; gap: 16px; margin-top: 6px; }
+  .radio-row label { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; text-transform: none; letter-spacing: 0; font-weight: 400; cursor: pointer; }
+  .radio-row input[type=radio] { width: 16px; height: 16px; accent-color: var(--gold); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: block; width: 100%; padding: 14px; border: none; border-radius: 10px;
+    font-family: 'Jost', sans-serif; font-size: 14px; font-weight: 600;
+    letter-spacing: .12em; text-transform: uppercase; cursor: pointer; transition: all .2s;
+  }
+  .btn-primary { background: var(--olive); color: #fff; }
+  .btn-primary:active { background: var(--olive-mid); transform: scale(.98); }
+  .btn-secondary { background: var(--parchment); color: var(--ink-soft); margin-top: 10px; }
+  .btn-danger { background: var(--red-def); color: #fff; margin-top: 10px; }
+
+  /* ── SEARCH ── */
+  .search-bar { display: flex; gap: 8px; margin-bottom: 16px; }
+  .search-bar input { flex: 1; }
+  .search-bar button { padding: 10px 16px; border: none; background: var(--olive); color: #fff; border-radius: 8px; font-size: 18px; cursor: pointer; }
+
+  /* ── LIST ITEMS ── */
+  .scheda-item {
+    background: #fff; border-radius: var(--r); box-shadow: 0 2px 8px var(--shadow);
+    padding: 14px 16px; margin-bottom: 10px; cursor: pointer; transition: transform .15s;
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .scheda-item:active { transform: scale(.98); }
+  .si-info { flex: 1; }
+  .si-code { font-size: 12px; font-weight: 600; color: var(--olive); letter-spacing: .08em; text-transform: uppercase; }
+  .si-name { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 600; color: var(--ink); }
+  .si-date { font-size: 11px; color: #999; margin-top: 2px; }
+  .si-score { text-align: right; }
+  .score-bubble {
+    display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--olive); color: #fff; font-size: 14px; font-weight: 700;
+  }
+  .score-bubble small { font-size: 8px; font-weight: 400; opacity: .8; }
+
+  /* ── DETAIL MODAL ── */
+  #modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 100;
+    display: none; align-items: flex-end; justify-content: center;
+  }
+  #modal-overlay.open { display: flex; }
+  #modal-box {
+    background: var(--cream); border-radius: 20px 20px 0 0; width: 100%; max-width: 480px;
+    max-height: 85vh; overflow-y: auto; padding: 24px 20px 40px;
+    box-shadow: 0 -4px 30px var(--shadow);
+    animation: slideup .3s ease;
+  }
+  @keyframes slideup { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-handle { width: 40px; height: 4px; background: #ccc; border-radius: 2px; margin: 0 auto 20px; }
+  .modal-title { font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:600; color:var(--olive); margin-bottom:4px; }
+  .modal-sub { font-size:12px; color:#999; margin-bottom:16px; }
+  .detail-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--parchment); font-size:13px; }
+  .detail-row:last-child { border:none; }
+  .detail-label { color:var(--ink-soft); font-weight:500; }
+  .detail-val { font-weight:600; color:var(--ink); text-align:right; max-width:55%; }
+  .bar-wrap { flex:1; margin: 0 10px; background:var(--parchment); border-radius:3px; height:6px; align-self:center; }
+  .bar-fill { height:100%; border-radius:3px; background:var(--olive); }
+  .bar-fill.neg { background:var(--red-def); }
+
+  /* ── REPORT ── */
+  .report-stat { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+  .rs-label { font-size:12px; color:var(--ink-soft); min-width:110px; }
+  .rs-bar-wrap { flex:1; background:var(--parchment); border-radius:4px; height:10px; }
+  .rs-bar { height:100%; border-radius:4px; background:var(--olive-lt); }
+  .rs-val { font-size:12px; font-weight:700; color:var(--olive); min-width:28px; text-align:right; }
+  .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+  .stat-box { background:var(--olive); color:#fff; border-radius:10px; padding:12px; text-align:center; }
+  .stat-box .n { font-size:28px; font-weight:700; font-family:'Cormorant Garamond',serif; }
+  .stat-box .l { font-size:10px; opacity:.75; letter-spacing:.1em; text-transform:uppercase; }
+  .empty-state { text-align:center; padding:40px 20px; color:#aaa; font-size:14px; }
+  .empty-state .big { font-size:48px; margin-bottom:12px; }
+
+  /* ── TOAST ── */
+  #toast {
+    position:fixed; bottom:80px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--olive); color:#fff; padding:10px 22px; border-radius:30px;
+    font-size:13px; font-weight:500; opacity:0; transition:all .3s; z-index:200; white-space:nowrap;
+  }
+  #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* misc */
+  .mt8{margin-top:8px;} .mt16{margin-top:16px;} .section-hdr{font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--olive-mid);margin:18px 0 8px;}
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { font-size:11px; background:var(--parchment); color:var(--ink-soft); border-radius:20px; padding:3px 10px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div>
+      <h1>OlivePanel <span>Schede di Assaggio</span></h1>
+    </div>
+    <div class="hdr-leaf">🫒</div>
+  </header>
+
+  <nav>
+    <button class="active" onclick="showScreen('nuova',this)"><span class="icon">✏️</span>Nuova</button>
+    <button onclick="showScreen('archivio',this)"><span class="icon">📋</span>Archivio</button>
+    <button onclick="showScreen('report',this)"><span class="icon">📊</span>Report</button>
+  </nav>
+
+  <!-- ═══════════════ SCHERMATA NUOVA ═══════════════ -->
+  <div id="screen-nuova" class="screen active">
+
+    <div class="card">
+      <div class="card-title">🫙 Dati Campione <span class="badge">Figura 1</span></div>
+
+      <label>Nome / Codice Campione</label>
+      <input type="text" id="f-codice" placeholder="es. OL-2024-001">
+
+      <label>Nome Assaggiatore</label>
+      <input type="text" id="f-assaggiatore" placeholder="Nome e cognome">
+
+      <label>Codice Assaggiatore</label>
+      <input type="text" id="f-cod-assaggiatore" placeholder="es. A-03">
+
+      <label>Data</label>
+      <input type="date" id="f-data">
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚠️ Difetti – Intensità di Percezione</div>
+      <p style="font-size:12px;color:#999;margin-bottom:4px">0 = assente · 10 = molto intenso</p>
+
+      <label>Riscaldo / Morchia</label>
+      <div class="slider-wrap">
+        <input type="range" min="0" max="10" step="0.5" value="0" oninput="syncSlider(this,'v-riscaldo')" id="s-riscaldo">
+        <span class="slider-val" id="v-riscaldo">0</span>
+      </div>
+
+      <label>Muffa – Umidità – Terra</label>
+      <div class="slider-wrap">
+        <input type="range" min="0" max="10" step="0.5" value="0" oninput="syncSlider(this,'v-muffa')" id="s-muffa">
+        <span class="slider-val" id="v-muffa">0</span>
+      </div>
+
+      <label>Avvinato – Inacetito – Acido – Agro</label>
+      <div class="slider-wrap">
+        <input type="range" min="0" max="10" step="0.5" value="0" oninput="syncSlider(this,'v-avvinato')" id="s-avvinato">
+        <span class="slider-val" id="v-avvinato">0</span>
+      </div>
+
+      <label>Olive Gelate (Legno Umido)</label>
+      <div class="slider-wrap">
+        <input type="range" min="0" max="10" step="0.5" value="0" oninput="syncSlider(this,'v-gelate')" id="s-gelate">
+        <span class="slider-val" id="v-gelate">0</span>
+      </div>
+
+      <label>Rancido</label>
+      <div class="slider-wrap">
+        <input type="range" min="0" max="10" step="0.5" value="0" oninput="syncSlider(this,'v-rancido')" id="s-rancido">
+        <span class="slider-val" id="v-rancido">0</span>
+      </div>
+
+      <div class="section-hdr">Altri Attributi Negativi</div>
+      <div class="check-grid">
+        <div class="check-item"><input type="checkbox" id="c-metallico"><label for="c-metallico">Metallico</label></div>
+        <div class="check-item"><input type="checkbox" id="c-fieno"><label for="c-fieno">Fieno</label></div>
+        <div class="check-item"><input type="checkbox" id="c-verme"><label for="c-verme">Verme</label></div>
+        <div class="check-item"><input type="checkbox" id="c-grossolano"><label for="c-grossolano">Grossolano</label></div>
+        <div class="check-item"><input type="checkbox" id="c-salamoia"><label for="c-salamoia">Salamoia</label></div>
+        <div class="check-item"><input type="checkbox" id="c-cotto"><label for="c-cotto">Cotto/Stracotto</label></div>
+        <div class="check-item"><input type="checkbox" id="c-acqua"><label for="c-acqua">Acqua di veg.</label></div>
+        <div class="check-item"><input type="checkbox" id="c-sparto"><label for="c-sparto">Sparto</label></div>
+        <div class="check-item"><input type="checkbox" id="c-cetriolo"><label for="c-cetriolo">Cetriolo</label></div>
+        <div class="check-item"><input type="checkbox" id="c-lubrificanti"><label for="c-lubrificanti">Lubrificanti</label></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">✅ Attributi Positivi</div>
+
+      <label>Fruttato</label>
+      <div class="slider-wrap">
+        <input type="range" min="0" max="10" step="0.5" value="0" oninput="syncSlider(this,'v-fruttato')" id="s-fruttato">
+        <span class="slider-val" id="v-fruttato">0</span>
+      </div>
+      <div class="radio-row mt8">
+        <label><input type="radio" name="fruttato-tipo" value="verde" id="r-verde"> Verde</label>
+        <label><input type="radio" name="fruttato-tipo" value="maturo" id="r-maturo"> Maturo</label>
+        <label><input type="radio" name="fruttato-tipo" value="" checked> Non specificato</label>
+      </div>
+
+      <label>Amaro</label>
+      <div class="slider-wrap">
+        <input type="range" min="0" max="10" step="0.5" value="0" oninput="syncSlider(this,'v-amaro')" id="s-amaro">
+        <span class="slider-val" id="v-amaro">0</span>
+      </div>
+
+      <label>Piccante</label>
+      <div class="slider-wrap">
+        <input type="range" min="0" max="10" step="0.5" value="0" oninput="syncSlider(this,'v-piccante')" id="s-piccante">
+        <span class="slider-val" id="v-piccante">0</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📝 Note</div>
+      <label>Osservazioni</label>
+      <textarea id="f-note" placeholder="Aggiungi note sull'assaggio..."></textarea>
+    </div>
+
+    <div style="padding-bottom:20px;">
+      <button class="btn btn-primary" onclick="salvaScheda()">💾 Salva Scheda</button>
+      <button class="btn btn-secondary" onclick="resetForm()">🔄 Azzera</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SCHERMATA ARCHIVIO ═══════════════ -->
+  <div id="screen-archivio" class="screen">
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="Cerca per nome, codice, assaggiatore…" oninput="renderArchivio()">
+      <button onclick="renderArchivio()">🔍</button>
+    </div>
+
+    <div id="archivio-list">
+      <div class="empty-state"><div class="big">🫒</div>Nessuna scheda salvata.<br>Crea la prima dalla scheda <strong>Nuova</strong>.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SCHERMATA REPORT ═══════════════ -->
+  <div id="screen-report" class="screen">
+    <div id="report-content">
+      <div class="empty-state"><div class="big">📊</div>Nessun dato disponibile.</div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- ═══════════════ MODAL DETTAGLIO ═══════════════ -->
+<div id="modal-overlay" onclick="closeModal(event)">
+  <div id="modal-box">
+    <div class="modal-handle"></div>
+    <div id="modal-inner"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ───────────────────────── STORAGE ─────────────────────────
+const KEY = 'olivepanel_schede';
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(e){return[];} }
+function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+
+// ───────────────────────── NAV ─────────────────────────
+function showScreen(id, btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(id==='archivio') renderArchivio();
+  if(id==='report') renderReport();
+}
+
+// ───────────────────────── SLIDER ─────────────────────────
+function syncSlider(el, valId){ document.getElementById(valId).textContent = el.value; }
+
+// ───────────────────────── FORM ─────────────────────────
+function resetForm(){
+  ['riscaldo','muffa','avvinato','gelate','rancido','fruttato','amaro','piccante'].forEach(k=>{
+    document.getElementById('s-'+k).value=0;
+    document.getElementById('v-'+k).textContent='0';
+  });
+  ['metallico','fieno','verme','grossolano','salamoia','cotto','acqua','sparto','cetriolo','lubrificanti'].forEach(k=>{
+    document.getElementById('c-'+k).checked=false;
+  });
+  document.getElementById('f-codice').value='';
+  document.getElementById('f-assaggiatore').value='';
+  document.getElementById('f-cod-assaggiatore').value='';
+  document.getElementById('f-data').value='';
+  document.getElementById('f-note').value='';
+  document.querySelectorAll('input[name="fruttato-tipo"]')[2].checked=true;
+}
+
+function salvaScheda(){
+  const codice = document.getElementById('f-codice').value.trim();
+  const assaggiatore = document.getElementById('f-assaggiatore').value.trim();
+  if(!codice){ showToast('⚠️ Inserisci il codice campione'); return; }
+  if(!assaggiatore){ showToast('⚠️ Inserisci il nome assaggiatore'); return; }
+
+  const descrittori = ['metallico','fieno','verme','grossolano','salamoia','cotto','acqua','sparto','cetriolo','lubrificanti']
+    .filter(k=>document.getElementById('c-'+k).checked);
+
+  const fruttato_tipo = document.querySelector('input[name="fruttato-tipo"]:checked')?.value || '';
+
+  const scheda = {
+    id: Date.now(),
+    codice,
+    assaggiatore,
+    cod_assaggiatore: document.getElementById('f-cod-assaggiatore').value.trim(),
+    data: document.getElementById('f-data').value || new Date().toISOString().slice(0,10),
+    note: document.getElementById('f-note').value.trim(),
+    difetti: {
+      riscaldo: +document.getElementById('s-riscaldo').value,
+      muffa:    +document.getElementById('s-muffa').value,
+      avvinato: +document.getElementById('s-avvinato').value,
+      gelate:   +document.getElementById('s-gelate').value,
+      rancido:  +document.getElementById('s-rancido').value,
+    },
+    descrittori,
+    positivi: {
+      fruttato: +document.getElementById('s-fruttato').value,
+      fruttato_tipo,
+      amaro:    +document.getElementById('s-amaro').value,
+      piccante: +document.getElementById('s-piccante').value,
+    }
+  };
+
+  const list = load();
+  list.unshift(scheda);
+  save(list);
+  showToast('✅ Scheda salvata!');
+  resetForm();
+}
+
+// ───────────────────────── ARCHIVIO ─────────────────────────
+function renderArchivio(){
+  const q = (document.getElementById('search-input').value||'').toLowerCase();
+  let list = load();
+  if(q) list = list.filter(s=>
+    s.codice.toLowerCase().includes(q)||
+    s.assaggiatore.toLowerCase().includes(q)||
+    (s.cod_assaggiatore||'').toLowerCase().includes(q)
+  );
+
+  const el = document.getElementById('archivio-list');
+  if(!list.length){
+    el.innerHTML = `<div class="empty-state"><div class="big">🔍</div>${q?'Nessun risultato per "'+q+'"':'Nessuna scheda salvata.'}</div>`;
+    return;
+  }
+
+  el.innerHTML = list.map(s=>{
+    const score = calcScore(s);
+    const scoreColor = score>=7?'#4a5e2a': score>=5?'#c9a84c':'#8b2e2e';
+    return `<div class="scheda-item" onclick="openModal(${s.id})">
+      <div class="si-info">
+        <div class="si-code">${s.codice}</div>
+        <div class="si-name">${s.assaggiatore}</div>
+        <div class="si-date">${formatDate(s.data)}</div>
+      </div>
+      <div class="si-score">
+        <div class="score-bubble" style="background:${scoreColor}">
+          <span>${score.toFixed(1)}</span>
+          <small>/10</small>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function calcScore(s){
+  const difMax = Math.max(...Object.values(s.difetti));
+  const pos = (s.positivi.fruttato + s.positivi.amaro + s.positivi.piccante)/3;
+  return Math.max(0, Math.min(10, pos * (1 - difMax/15)));
+}
+
+function formatDate(d){ if(!d)return''; const p=d.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+
+// ───────────────────────── REPORT ─────────────────────────
+function renderReport(){
+  const list = load();
+  const el = document.getElementById('report-content');
+  if(!list.length){
+    el.innerHTML=`<div class="empty-state"><div class="big">📊</div>Nessun dato disponibile.</div>`;
+    return;
+  }
+
+  const n = list.length;
+  const avg = k => list.reduce((s,x)=>s+x.positivi[k],0)/n;
+  const avgD = k => list.reduce((s,x)=>s+x.difetti[k],0)/n;
+  const scores = list.map(calcScore);
+  const avgScore = scores.reduce((a,b)=>a+b,0)/n;
+  const best = list[scores.indexOf(Math.max(...scores))];
+  const worst = list[scores.indexOf(Math.min(...scores))];
+
+  // descrittori frequency
+  const descFreq = {};
+  list.forEach(s=>s.descrittori.forEach(d=>{ descFreq[d]=(descFreq[d]||0)+1; }));
+  const topDesc = Object.entries(descFreq).sort((a,b)=>b[1]-a[1]).slice(0,4);
+
+  const bar = (v,max=10,neg=false)=>`
+    <div class="bar-wrap" style="flex:1"><div class="bar-fill${neg?' neg':''}" style="width:${(v/max)*100}%"></div></div>
+  `;
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-title">📊 Riepilogo Generale</div>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="n">${n}</div><div class="l">Schede totali</div></div>
+        <div class="stat-box"><div class="n">${avgScore.toFixed(1)}</div><div class="l">Punteggio medio</div></div>
+      </div>
+      <div class="detail-row"><span class="detail-label">Miglior campione</span><span class="detail-val">${best.codice}</span></div>
+      <div class="detail-row"><span class="detail-label">Peggior campione</span><span class="detail-val">${worst.codice}</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">✅ Media Attributi Positivi</div>
+      ${['fruttato','amaro','piccante'].map(k=>`
+        <div class="report-stat">
+          <span class="rs-label">${k.charAt(0).toUpperCase()+k.slice(1)}</span>
+          <div class="rs-bar-wrap"><div class="rs-bar" style="width:${(avg(k)/10)*100}%"></div></div>
+          <span class="rs-val">${avg(k).toFixed(1)}</span>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚠️ Media Difetti</div>
+      ${Object.keys(list[0].difetti).map(k=>`
+        <div class="report-stat">
+          <span class="rs-label">${k.charAt(0).toUpperCase()+k.slice(1)}</span>
+          <div class="rs-bar-wrap"><div class="rs-bar" style="background:var(--red-def);width:${(avgD(k)/10)*100}%"></div></div>
+          <span class="rs-val" style="color:var(--red-def)">${avgD(k).toFixed(1)}</span>
+        </div>
+      `).join('')}
+    </div>
+
+    ${topDesc.length?`
+    <div class="card">
+      <div class="card-title">🏷️ Descrittori più Frequenti</div>
+      <div class="chips">
+        ${topDesc.map(([d,c])=>`<span class="chip">${d} (${c}×)</span>`).join('')}
+      </div>
+    </div>`:''}
+
+    <div class="card">
+      <div class="card-title">🏆 Classifica Campioni</div>
+      ${[...list].sort((a,b)=>calcScore(b)-calcScore(a)).slice(0,10).map((s,i)=>`
+        <div class="detail-row">
+          <span class="detail-label">${i+1}. ${s.codice}</span>
+          <div style="display:flex;align-items:center;gap:8px;flex:1;margin-left:12px">
+            ${bar(calcScore(s))}
+            <span style="font-weight:700;font-size:13px;color:var(--olive)">${calcScore(s).toFixed(1)}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ───────────────────────── MODAL ─────────────────────────
+function openModal(id){
+  const scheda = load().find(s=>s.id===id);
+  if(!scheda) return;
+
+  const bar = (v,neg=false)=>`
+    <div class="bar-wrap"><div class="bar-fill${neg?' neg':''}" style="width:${v*10}%"></div></div>
+  `;
+
+  const descStr = scheda.descrittori.length ? scheda.descrittori.join(', ') : '—';
+  const score = calcScore(scheda);
+
+  document.getElementById('modal-inner').innerHTML = `
+    <div class="modal-title">${scheda.codice}</div>
+    <div class="modal-sub">
+      👤 ${scheda.assaggiatore} ${scheda.cod_assaggiatore?'('+scheda.cod_assaggiatore+')':''} &nbsp;·&nbsp; 📅 ${formatDate(scheda.data)}
+    </div>
+
+    <div class="card" style="background:var(--olive);color:#fff;text-align:center;padding:14px">
+      <div style="font-size:40px;font-family:'Cormorant Garamond',serif;font-weight:700">${score.toFixed(1)}<span style="font-size:18px;opacity:.7">/10</span></div>
+      <div style="font-size:11px;opacity:.7;letter-spacing:.12em;text-transform:uppercase">Punteggio complessivo</div>
+    </div>
+
+    <div class="section-hdr">Difetti</div>
+    ${Object.entries(scheda.difetti).map(([k,v])=>`
+      <div class="detail-row">
+        <span class="detail-label">${k.charAt(0).toUpperCase()+k.slice(1)}</span>
+        ${bar(v,true)}
+        <span class="detail-val">${v}</span>
+      </div>
+    `).join('')}
+
+    <div class="section-hdr">Attributi Positivi</div>
+    ${['fruttato','amaro','piccante'].map(k=>`
+      <div class="detail-row">
+        <span class="detail-label">${k.charAt(0).toUpperCase()+k.slice(1)}${k==='fruttato'&&scheda.positivi.fruttato_tipo?' ('+scheda.positivi.fruttato_tipo+')':''}</span>
+        ${bar(scheda.positivi[k])}
+        <span class="detail-val">${scheda.positivi[k]}</span>
+      </div>
+    `).join('')}
+
+    <div class="section-hdr">Descrittori</div>
+    <div class="chips">${descStr==='—'?'<span style="color:#999;font-size:13px">Nessuno selezionato</span>':scheda.descrittori.map(d=>`<span class="chip">${d}</span>`).join('')}</div>
+
+    ${scheda.note?`<div class="section-hdr">Osservazioni</div><p style="font-size:13px;color:var(--ink-soft);line-height:1.6">${scheda.note}</p>`:''}
+
+    <button class="btn btn-danger" onclick="eliminaScheda(${scheda.id})">🗑️ Elimina Scheda</button>
+    <button class="btn btn-secondary mt8" onclick="closeModal()">Chiudi</button>
+  `;
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(e){
+  if(!e || e.target===document.getElementById('modal-overlay'))
+    document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function eliminaScheda(id){
+  if(!confirm('Eliminare questa scheda?')) return;
+  save(load().filter(s=>s.id!==id));
+  closeModal();
+  renderArchivio();
+  showToast('🗑️ Scheda eliminata');
+}
+
+// ───────────────────────── TOAST ─────────────────────────
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// ───────────────────────── INIT ─────────────────────────
+document.getElementById('f-data').value = new Date().toISOString().slice(0,10);
+</script>
+</body>
+</html>
